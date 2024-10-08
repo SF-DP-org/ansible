@@ -1,0 +1,18 @@
+---
+# list of ips
+kube_master_ip: ""
+kube_worker_ip: ""
+srv_ip: ""
+# list of hostnames
+kube_master_hostname: ""
+kube_worker_hostname: ""
+srv_hostname: ""
+# list of config paths
+path_for_kubectl_config: "configs/kubectl.conf"
+path_for_elasticsearch_config: "elasticsearch.yml"
+# list of service ports
+elasticsearch_port: "9200"
+zabbix_port: "8081"
+gitlab_port: "8082"
+kibana_port: "5601"
+app_port: "80"

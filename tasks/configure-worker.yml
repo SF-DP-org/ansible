@@ -1,0 +1,39 @@
+---
+- name: add kubernetes repo
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+- name: install kubeadm, kubectl and kubelet
+  apt:
+    name:
+    - kubeadm
+    - kubelet
+    state: latest
+    update-cache: yes
+- name: install docker
+  shell: curl https://get.docker.com | bash
+
+- name: remove dumb line in containerd config
+  shell: |
+    sed -i '/disabled_plugins/d' /etc/containerd/config.toml
+    systemctl restart containerd
+
+- name: get cluster join command
+  shell: kubeadm token create --print-join-command
+  delegate_to: '{{ kube_master_ip }}'
+  register: join_command
+
+- name: permit join to cluster
+  shell: "{{ join_command.stdout }}"
+
+- name: clone app repository
+  git:
+    repo: "https://github.com/SF-DP-org/app.git"
+    dest: /usr/lib/app
+    clone: yes
+
+- name: create symlink for application
+  file:
+    src: /usr/lib/app/app
+    dest: /
+    state: link

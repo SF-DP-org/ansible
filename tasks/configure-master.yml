@@ -1,0 +1,47 @@
+---
+- name: add kubernetes repo
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+
+- name: install kubeadm, kubectl and kubelet
+  apt:
+    name:
+    - kubeadm
+    - kubelet
+    - kubectl
+    - containerd
+    state: latest
+    update-cache: yes
+
+- name: change routing parameter in sysctl
+  shell: |
+    sysctl -w net.ipv4.ip_forward=1
+    sysctl -p
+  
+- name: permit initial configuration of kubernetes master node
+  shell: |
+    kubeadm init
+    mkdir ~/.kube
+    cp /etc/kubernetes/admin.conf ~/.kube/config && chown $USER:$USER ~/.kube/config
+    kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+  become: true
+  register: init_result
+  failed_when: "'ERROR' in init_result.stderr"
+
+- name: get admin.conf from kube-master
+  shell: cat /etc/kubernetes/admin.conf
+  register: admin_conf
+
+- name: write to localhost the admin.conf
+  copy:
+    content: "{{ admin_conf.stdout }}"
+    dest: kubectl.conf
+    remote_src: true
+  delegate_to: localhost
+
+- name: clone fluetnd repository
+  git: 
+    repo: "https://github.com/SF-DP-org/fluentd.git"
+    dest: ~/fluentd
+    clone: yes
