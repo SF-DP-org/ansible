@@ -3,6 +3,7 @@
 kube_master_ip: ""
 kube_worker_ip: ""
 srv_ip: ""
+srv_int_ip: ""
 # list of hostnames
 kube_master_hostname: ""
 kube_worker_hostname: ""
