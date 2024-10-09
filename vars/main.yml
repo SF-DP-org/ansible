@@ -1,9 +1,9 @@
 ---
 # list of ips
-kube_master_ip: "89.169.136.95"
-kube_worker_ip: "89.169.139.75"
-srv_ip: "89.169.156.3"
-srv_int_ip: "10.136.11.14"
+kube_master_ip: ""
+kube_worker_ip: ""
+srv_ip: ""
+srv_int_ip: ""
 # list of hostnames
 kube_master_hostname: "sf-dp-kube-master"
 kube_worker_hostname: "sf-dp-kube-worker"
