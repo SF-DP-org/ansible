@@ -1,50 +1,109 @@
 ---
-- name: add kubernetes repo
+# Installing packages 
+- name: add repositories
   shell: |
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-    wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb -O ~/zabbix-release.deb
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+    curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
+    curl https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | bash
+    wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb -o ~/zabbix-release.deb && apt install ~/zabbix-release.deb
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    
+- name: copy elasticsearch package
+  copy: 
+    src: "elasticsearch.deb"
+    dest: "~/elasticsearch.deb"
+- name: install remote packages
 
-- name: install zabbix repositories
-  apt:
-    deb: ~/zabbix-release.deb
+- name: copy kibana package
+  copy:
+    src: "kibana.deb"
+    dest: "~/kibana.deb"
 
-- name: install kubeadm, kubectl and kubelet
-  apt:
-    name:
-    - kubeadm
-    - kubelet
-    - zabbix-agent
+- name: install remote packages
+  apt: 
+    name: 
+      - kubectl
+      - gitlab-ce
+      - gitlab-runner
+      - postgresql
+      - zabbix-server-pgsql
+      - zabbix-frontend-php
+      - php8.3-pgsql
+      - zabbix-nginx-conf
+      - zabbix-sql-scripts
+      - zabbix-agent
+    update_cache: yes 
     state: latest
-    update-cache: yes
 
-- name: get cluster join command
-  shell: kubeadm token create --print-join-command
-  delegate_to: '{{ kube_master_ip }}'
-  register: join_command
+- name: install local elasticsearch package
+  apt:
+    deb: "~/elasticsearch.deb"
 
-- name: permit join to cluster
-  shell: "{{ join_command.stdout }}"
+- name: install local kibana package
+  apt:
+    deb: "~/kibana.deb"
 
-- name: clone app repository
-  git:
-    repo: "https://github.com/SF-DP-org/app.git"
-    dest: /usr/lib/app
+# Configuring services
+
+- name: create a ~/.kube directory
+  file:
+    state: directory
+    path: ~/.kube
+    mode: '0700'
+
+- name: configure kubectl for managing kubernetes cluster
+  copy:
+    src: kubectl.conf
+    dest: ~/.kube/config
+
+- name: copy elasticsearch config 
+  template:
+    src: elasticsearch.yml.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+
+- name: copy zabbix nginx config 
+  template:
+    src: zabbix_nginx.conf.j2
+    dest: /etc/zabbix/nginx.conf
+
+- name: copy gitlab configuration
+  template:
+    src: gitlab.rb.j2
+    dest: /etc/gitlab/gitlab.rb
+
+- name: app nginx config 
+  template:
+    src: app_nginx.conf.j2
+    dest: /etc/nginx/sites-available/app
+
+- name: copy zabbix configuration script
+  copy:
+    src: zabbix_configuration.sh
+    dest: ~/zabbix_configuration.sh
+    mode: '0755'
+
+- name: clone helm chart repo
+  git: 
+    repo: "https://github.com/SF-DP-org/helm.git"
+    dest: /usr/lib/helm
     clone: yes
 
-- name: create symlink for application
-  file:
-    src: /usr/lib/app/app
-    dest: /
-    state: link
+# Starting services
 
-- name: copy zabbix-agent config
-  template:
-    src: zabbix_agentd.conf.j2
-    dest: /etc/zabbix/zabbix_agentd.conf
+- name: invoke gitlab reconfigure
+  shell: gitlab-ctl reconfigure
+  ignore_errors: true
 
-- name: restart zabbix zabbix-agent
+- name: start elasticsearch
   systemd_service:
-    name: zabbix-agent
-    state: restarted
+    state: started
+    name: elasticsearch
     ignore_errors: true
+  
+- name: start kibana
+  systemd_service:
+    state: started
+    name: kibana
+    ignore_errors: true
+  
