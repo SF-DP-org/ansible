@@ -6,19 +6,19 @@
     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
     curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
     curl https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | bash
-    wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb -o /tmp/zabbix-release.deb && apt install /tmp/zabbix-release.deb
+    wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb -o ~/zabbix-release.deb && apt install ~/zabbix-release.deb
     curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
     
 - name: copy elasticsearch package
   copy: 
     src: "elasticsearch.deb"
-    dest: "/tmp/elasticsearch.deb"
+    dest: "~/elasticsearch.deb"
 - name: install remote packages
 
 - name: copy kibana package
   copy:
     src: "kibana.deb"
-    dest: "/tmp/kibana.deb"
+    dest: "~/kibana.deb"
 
 - name: install remote packages
   apt: 
@@ -38,11 +38,11 @@
 
 - name: install local elasticsearch package
   apt:
-    deb: "/tmp/elasticsearch.deb"
+    deb: "~/elasticsearch.deb"
 
 - name: install local kibana package
   apt:
-    deb: "/tmp/kibana.deb"
+    deb: "~/kibana.deb"
 
 # Configuring services
 
