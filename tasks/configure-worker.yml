@@ -52,4 +52,4 @@
   systemd_service:
     name: zabbix-agent
     state: restarted
-    ignore_errors: trues
+    ignore_errors: true
