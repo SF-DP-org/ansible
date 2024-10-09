@@ -18,6 +18,11 @@
     state: latest
     update-cache: yes
 
+- name: change routing parameter in sysctl
+  shell: |
+    sysctl -w net.ipv4.ip_forward=1
+    sysctl -p 
+
 - name: get cluster join command
   shell: kubeadm token create --print-join-command
   delegate_to: '{{ kube_master_ip }}'
