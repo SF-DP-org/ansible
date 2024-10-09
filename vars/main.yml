@@ -1,13 +1,13 @@
 ---
 # list of ips
-kube_master_ip: ""
-kube_worker_ip: ""
-srv_ip: ""
-srv_int_ip: ""
+kube_master_ip: "89.169.136.95"
+kube_worker_ip: "89.169.139.75"
+srv_ip: "89.169.156.3"
+srv_int_ip: "10.136.11.14"
 # list of hostnames
-kube_master_hostname: ""
-kube_worker_hostname: ""
-srv_hostname: ""
+kube_master_hostname: "sf-dp-kube-master"
+kube_worker_hostname: "sf-dp-kube-worker"
+srv_hostname: "sf-dp-srv"
 # list of config paths
 path_for_kubectl_config: "configs/kubectl.conf"
 path_for_elasticsearch_config: "elasticsearch.yml"
@@ -17,3 +17,4 @@ zabbix_port: "8081"
 gitlab_port: "8082"
 kibana_port: "5601"
 app_port: "80"
+service_port: ""
