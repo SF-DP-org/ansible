@@ -1,2 +1,9 @@
 ---
-# tasks file for configure
+- include_tasks: configure-master.yml
+  when: master
+
+- include_tasks: configure-worker.yml
+  when: worker
+
+- include_tasks: configure-srv.yml
+  when: srv
