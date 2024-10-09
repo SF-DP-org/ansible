@@ -19,7 +19,7 @@ Variables described in vars/main.yml, that contains:
 
     host_hostname # hostname of instance
 
-    service_or_application_port # port on described application or service should be work
+    service_or_application_port # port on described application or service should work
 
 
 Example Playbook
