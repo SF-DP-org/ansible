@@ -3,11 +3,18 @@
   shell: |
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb -O /tmp/zabbix-release.deb
+
+- name: install zabbix repositories
+  apt:
+    deb: /tmp/zabbix-release.deb
+
 - name: install kubeadm, kubectl and kubelet
   apt:
     name:
     - kubeadm
     - kubelet
+    - zabbix-agent
     state: latest
     update-cache: yes
 - name: install docker
@@ -37,3 +44,14 @@
     src: /usr/lib/app/app
     dest: /
     state: link
+
+- name: copy zabbix-agent config
+  template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+
+- name: restart zabbix zabbix-agent
+  systemd_service:
+    name: zabbix-agent
+    state: restarted
+    ignore_errors: trues
